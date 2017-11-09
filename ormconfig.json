@@ -1,0 +1,28 @@
+[{
+    "name": "development",
+    "type": "sqlite",
+    "database": ":memory:",
+    "migrations": [
+        "build/migrations/*.js"
+    ],
+    "entities": [
+        "build/entities/*.js"
+    ],
+    "autoSchemaSync": true
+},{
+    "name": "production",
+    "type": "mysql",
+    "location": "127.0.0.1",
+    "port": 3306,
+    "username": "root",
+    "password": "",
+    "database": "test",
+    "synchronize": true,
+    "dropSchema": true,
+    "migrations": [
+        "build/migrations/*.js"
+    ],
+    "entities": [
+        "build/entities/*.js"
+    ]
+}]
