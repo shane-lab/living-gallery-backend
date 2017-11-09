@@ -1,6 +1,6 @@
 import { Context } from 'koa';
 import * as KoaRouter from 'koa-router';
-import { Connection } from 'typeorm';
+import { Connection, getConnection } from 'typeorm';
 
 import { ClientController } from '../controllers/ClientController';
 
@@ -16,12 +16,13 @@ export interface IController {
 const compose = require('koa-compose');
 
 module.exports = (connection: Connection) => {
+    
+    // const clientController = new ClientController(connection);
 
-    const clientController = new ClientController(connection);
-
-    clientController.add(/*{neighbors: [null]}*/)
-        .then(client => console.log(client), void 0)
-        .catch(err => console.log(err));
+    // clientController.add()
+    //     .then(client => clientController.add({ neighbors: [client]}))
+    //     .then(client => console.log(client))
+    //     .catch(err => console.log(err));
 
     const routers: KoaRouter[] = [require('./api')];
 

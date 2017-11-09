@@ -4,6 +4,8 @@ import * as typeorm from 'typeorm';
 
 import convert = require('koa-convert');
 
+import * as chalk from 'chalk';
+
 interface TypeOrmContext extends Koa.BaseContext {
     db?: typeorm.Connection;
 }
@@ -15,13 +17,16 @@ module.exports.getApp = async (type?: string): Promise<TypedApplication> => {
 
     const config = (require("../ormconfig") as typeorm.ConnectionOptions[]).find(type => type.name === connectionType);
 
+    console.log(chalk.default`creating connection for type {blue ${connectionType}}, awaiting connection...`);
     if (!config) {
-        throw new Error(`No orm connection configured for '${connectionType}'`);
+        throw new Error(`No typeorm connection configured for type '${connectionType}'`);
     }
 
     let connection: typeorm.Connection;
     try {
         connection = await typeorm.createConnection(config);
+
+        console.log(chalk.default`...{blue typorm} connection set`);
     } catch (err) {
         throw new Error(err.message || err || `Unable to connect to driver set for connection '${connectionType}'`);
     }

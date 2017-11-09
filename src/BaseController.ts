@@ -1,8 +1,11 @@
-import { Connection, getManager, Repository } from 'typeorm';
+import { Connection, getConnection, getManager, Repository } from 'typeorm';
 import { BadRequest } from 'http-errors';
 
 import { BaseEntity } from './BaseEntity';
 
+import { Injectable } from './decorators';
+
+@Injectable((target: BaseController<T>) => target.connection = getConnection(process.env.NODE_ENV))
 export abstract class BaseController<T extends BaseEntity<T>> {
 
     constructor(private connection: Connection, private type: (new () => T)) { }
@@ -21,7 +24,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         return await this.db().findOne(fields);
     }
 
-    async getById(id: number) {
+    async getById(id: number|string) {
         return this.db().findOneById(id);
     }
 
@@ -37,13 +40,13 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         return await this.db().save(entity);
     }
 
-    async updateById(id: number, fields: Partial<T>) {
+    async updateById(id: number|string, fields: Partial<T>) {
         this.validate(fields);
 
         return await this.db().updateById(id, fields);
     }
 
-    async deleteById(id: number) {
+    async deleteById(id: number|string) {
         return await this.db().removeById(id);
     }
 }

@@ -8,7 +8,7 @@ if (!module.parent) {
 
     getApp()
         .then(app => app.listen(process.env.PORT, 
-            console.log(chalk`server bootstrapped using env {blue ${process.env.NODE_ENV}} on port {blue ${process.env.PORT}}`)))
+            console.log(chalk`server bootstrapped, using {blue ${process.env.NODE_ENV}} environment on port {blue ${process.env.PORT}}`)))
         .catch(err => console.error(err));
 }
 

@@ -1,6 +1,13 @@
 import * as Router from 'koa-router';
+import * as chalk from 'chalk';
 
-// import controller = require('./controller');
+import { ApiRouter } from './ApiRouter';
+
+const apirouter = new ApiRouter();
+
+apirouter.all
+    .then(clients => console.log(clients))
+    .catch(err => console.log(chalk.default.red(err.message || err) as string));
 
 export const router = module.exports = new Router({ prefix: '/api' });
 
