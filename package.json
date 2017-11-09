@@ -17,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/chalk": "^2.2.0",
     "@types/koa": "^2.0.39",
     "@types/koa-bodyparser": "^3.0.25",
     "@types/koa-router": "^7.0.23",
@@ -38,8 +39,7 @@
     "koa-useragent": "^1.0.0",
     "mysql": "^2.15.0",
     "reflect-metadata": "^0.1.10",
-    "sqlite": "^2.8.0",
-    "typeorm": "^0.1.1"
+    "sqlite3": "^3.1.13"
   },
   "devDependencies": {
     "@types/node": "^8.0.47",
@@ -60,6 +60,7 @@
     "should": "^13.1.3",
     "supertest": "^3.0.0",
     "tsc-watch": "^1.0.8",
+    "typeorm": "^0.1.2",
     "typescript": "^2.6.1"
   }
 }

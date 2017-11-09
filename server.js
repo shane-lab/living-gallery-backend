@@ -4,9 +4,11 @@ process.env.PORT = process.env.PORT || 3000;
 const { getApp } = require('./build');
 
 if (!module.parent) {
+    const chalk = require('chalk');
+
     getApp()
-        .then(app => app.listen(process.env.PORT))
-        .then(server => (console.log(`server bootstrapped using port ${process.env.PORT}`), void 0))
+        .then(app => app.listen(process.env.PORT, 
+            console.log(chalk`server bootstrapped using env {blue ${process.env.NODE_ENV}} on port {blue ${process.env.PORT}}`)))
         .catch(err => console.error(err));
 }
 

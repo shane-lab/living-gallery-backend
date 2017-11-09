@@ -1,4 +1,5 @@
 import { Connection, getManager, Repository } from 'typeorm';
+import { BadRequest } from 'http-errors';
 
 import { BaseEntity } from './BaseEntity';
 
@@ -24,26 +25,22 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         return this.db().findOneById(id);
     }
 
-    async add(fields: Partial<T>) {
+    async add(fields?: Partial<T>) {
         this.validate(fields);
 
-        const entity = new this.type();
-        for (let field in fields) {
-            entity[field] = fields[field];
+        const entity = await this.db().create(fields);
+
+        if (!entity) {
+            throw new BadRequest('Unable to create entity');
         }
 
-        return await this.db().create(entity);
+        return await this.db().save(entity);
     }
 
     async updateById(id: number, fields: Partial<T>) {
         this.validate(fields);
 
-        const entity = await this.getById(id);
-        for (let field in fields) {
-            entity[field] = fields[field];
-        }
-
-        return await this.db().updateById(id, entity);
+        return await this.db().updateById(id, fields);
     }
 
     async deleteById(id: number) {

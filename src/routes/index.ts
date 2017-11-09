@@ -1,4 +1,5 @@
 import { Context } from 'koa';
+import * as KoaRouter from 'koa-router';
 import { Connection } from 'typeorm';
 
 import { ClientController } from '../controllers/ClientController';
@@ -18,13 +19,13 @@ module.exports = (connection: Connection) => {
 
     const clientController = new ClientController(connection);
 
-    clientController.add({})
-        .then(client => console.log('client:', client.createdAt))
+    clientController.add(/*{neighbors: [null]}*/)
+        .then(client => console.log(client), void 0)
         .catch(err => console.log(err));
 
-    const routers = [require('./api')];
+    const routers: KoaRouter[] = [require('./api')];
 
-    const middlewares = [];
+    const middlewares: KoaRouter.IMiddleware[] = [];
     routers.forEach(router => {
         middlewares.push(router.routes())
         middlewares.push(router.allowedMethods())

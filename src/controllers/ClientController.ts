@@ -11,9 +11,7 @@ export class ClientController extends BaseController<Client> {
         super(connection, Client);
     }
 
-    protected validate(fields: Partial<Client>) {
-        // throw new Error("Method not implemented.");
-    }
+    protected validate(fields: Partial<Client>) { }
 }
 
 class ClientNotFound extends NotFound {

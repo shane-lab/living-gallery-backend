@@ -1,14 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-
-declare type Props<T> = {[K in keyof T]?: T[K]};
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, BeforeInsert, AfterInsert } from 'typeorm';
+import * as chalk from 'chalk';
 
 // ommit setting value through constructor to surpass default value.
 const isUnset = (obj: any) => obj === undefined || obj === null;
 
+const print = (obj: Object, message?: string) => (message ? console.log(chalk.default`--{blue ${message}}--`) : void 0, Object.entries(obj).forEach(([key, value]) => console.log(chalk.default`{green ${key}}: {red ${value}}`)));
+
 export abstract class BaseEntity<T> {
 
     @PrimaryGeneratedColumn('uuid', { name: 'id' })
-    uuid: number
+    uuid: string
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
@@ -16,29 +17,24 @@ export abstract class BaseEntity<T> {
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 
-    constructor(props?: Props<T>) {
+    constructor(props?: Partial<T>) {
+        this.construct(props);
+    }
+
+    private construct<K extends keyof Partial<T>>(props?: Partial<T>) {
         if (props) {
-            const copy = Object.assign({}, props) as any;
-            Object.keys(copy).filter(key => isUnset(copy[key])).forEach(key => (this[key as string] = copy[key]));
+            const copy = Object.assign({}, props);
+            Object.keys(copy).filter((key: K) => isUnset(copy[key])).forEach((key: K) => (this[key as string] = copy[key]));
         }
     }
+    
+    @BeforeInsert()
+    private beforeInsert() {
+        print(this, 'before insert');
+    }
+
+    @AfterInsert()
+    private afterInsert() {
+        print(this, 'after insert');
+    }
 };
-// @todo, resolve secondary generic type. its filled but somehow requires a type anyway?
-// export abstract class BaseEntity<T, K extends keyof Props<T>> {
-
-//     @PrimaryGeneratedColumn('uuid', { name: 'id' })
-//     uuid: number
-
-//     @CreateDateColumn({ name: 'created_at' })
-//     createdAt: Date;
-
-//     @UpdateDateColumn({ name: 'updated_at' })
-//     updatedAt: Date;
-
-//     constructor(props?: Props<T>) {
-//         if (props) {
-//             const copy = Object.assign({}, props);
-//             Object.keys(copy).filter((key: K) => unset(copy[key])).forEach((key: K) => (this[key as string] = copy[key]));
-//         }
-//     }
-// };
