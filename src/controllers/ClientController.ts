@@ -20,3 +20,5 @@ class ClientNotFound extends NotFound {
         super(`Client ${!!id ? `with id ${id}`: ''} was not found`);
     }
 }
+
+export { Client };

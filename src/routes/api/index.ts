@@ -1,17 +1,22 @@
-import * as Router from 'koa-router';
-import * as chalk from 'chalk';
-
 import { ApiRouter } from './ApiRouter';
 
-const apirouter = new ApiRouter();
+import { KoaRouterFactory } from '../../decorators/Router';
 
-apirouter.all
-    .then(clients => console.log(clients))
-    .catch(err => console.log(chalk.default.red(err.message || err) as string));
+export const router = module.exports = KoaRouterFactory(ApiRouter);
 
-export const router = module.exports = new Router({ prefix: '/api' });
+// console.log(apirouter);
 
-router.get('/', async (ctx) => ctx.body = 'API route');
+// try {
+//     apirouter.getAllClients()
+//         .then(clients => console.log('clients:', clients))
+//         .catch(err => console.error(chalk.default.red(err.message || err) as string));
+// } catch (err) {
+//     console.error(err.message || err);
+// }
+
+// export const router = module.exports = new Router({ prefix: '/api' });
+
+// router.get('/', async (ctx) => ctx.body = 'API route');
 
 // router.get('/auth/', /* authication handler */)
 

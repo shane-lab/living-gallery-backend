@@ -1,5 +1,15 @@
 {
     "presets": [
-        "es2015"
+        "env",
+        "stage-0",
+        "es2017"
+    ],
+    "plugins": [
+        "transform-class-properties",
+        "transform-decorators",
+        ["transform-runtime", { 
+            "polyfill": false,
+            "regenerator": true
+        }]
     ]
 }

@@ -13,7 +13,7 @@ interface TypeOrmContext extends Koa.BaseContext {
 declare type TypedApplication = Koa & { context: TypeOrmContext };
 
 module.exports.getApp = async (type?: string): Promise<TypedApplication> => {
-    const connectionType = type || process.env.NODE_ENV || 'development';
+    const connectionType = process.env.NODE_ENV = type || process.env.NODE_ENV || 'development';
 
     const config = (require("../ormconfig") as typeorm.ConnectionOptions[]).find(type => type.name === connectionType);
 

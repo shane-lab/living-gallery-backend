@@ -3,7 +3,7 @@ import { BadRequest } from 'http-errors';
 
 import { BaseEntity } from './BaseEntity';
 
-import { Injectable } from './decorators';
+import { Injectable } from './decorators/DependencyInjection';
 
 @Injectable((target: BaseController<T>) => target.connection = getConnection(process.env.NODE_ENV))
 export abstract class BaseController<T extends BaseEntity<T>> {

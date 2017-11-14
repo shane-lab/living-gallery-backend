@@ -6,3 +6,4 @@ build
 ./build
 **/*.map
 .dependencies
+**/*npm-debug.log.*

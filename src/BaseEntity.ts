@@ -1,12 +1,12 @@
 import { Entity, Column, VersionColumn, CreateDateColumn, UpdateDateColumn, BeforeInsert, AfterInsert } from 'typeorm';
 import * as chalk from 'chalk';
 
-import { EnvironmentPrimaryColumn } from './decorators';
+import { EnvironmentPrimaryColumn } from './decorators/PrimaryColumn';
 
 // ommit setting value through constructor to surpass default value.
 const isUnset = (obj: any) => obj === undefined || obj === null;
 
-const print = (obj: Object, message?: string) => (message ? console.log(chalk.default`--{blue ${message}}--`) : void 0, Object.entries(obj).forEach(([key, value]) => value === Object(value) && !(value instanceof Date) ? (console.log(chalk.default.cyan(`${key}: `)), print(value)) : console.log(chalk.default`{green ${key}}: {red ${value}}`)));
+const print = (obj: Object, message?: string) => (message ? console.log(chalk.default`--{blue ${message}}--`) : void 0, Object.entries(obj).forEach(([key, value]) => console.log(chalk.default`{green ${key}}: {red ${value}}`)));
 
 export abstract class BaseEntity<T> {
 

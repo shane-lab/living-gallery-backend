@@ -1,17 +1,41 @@
-import { ClientController } from '../../controllers/ClientController';
-import { Inject, InjectableRouter } from '../../decorators';
+import { ClientController, Client } from '../../controllers/ClientController';
 
-import { Client } from '../../entities/Client';
+import { InjectableRouter as Router, Route } from '../../decorators/Router';
 
-@InjectableRouter({
-    providers: [ClientController]
-})
+declare type Id = string | number;
+
+@Router({ prefix: 'api' })
 export class ApiRouter {
 
-    @Inject(ClientController)
-    private clientController: ClientController;
+    constructor(private clientController: ClientController) { }
 
-    public get all() {
+    // @Route('/')
+    // public index() {
+    //     return // docs?
+    // }
+
+    @Route('/clients')
+    public getAllClients() {
         return this.clientController.getAll();
+    }
+
+    @Route('/clients', 'post')
+    public addClient(fields: Partial<Client>) {
+        return this.clientController.add(fields);
+    }
+
+    @Route('/clients/:id')
+    public getClientById(id: Id) {
+        return this.clientController.getById(id);
+    }
+
+    @Route('/clients/:id', 'put')
+    public updateClientById(id: Id, fields: Partial<Client>) {
+        return this.clientController.updateById(id, fields);
+    }
+
+    @Route('/clients/:id', 'delete')
+    public deleteClientById(id: Id) {
+        return this.clientController.deleteById(id);
     }
 }

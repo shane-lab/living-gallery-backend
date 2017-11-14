@@ -21,6 +21,8 @@ gulp.task('test:api:client', mochaTask('server.api.client'));
 
 gulp.task('test:routers', mochaTask('server.routers'));
 
+gulp.task('test:injection', mochaTask('injection'));
+
 // clean before recompile
 gulp.task('tsc', ['clean'], shell.task('tsc'));
 
