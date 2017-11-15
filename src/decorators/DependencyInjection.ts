@@ -16,12 +16,14 @@ export const Inject = <T>(typeFunction?: IInjectable<T>, ...data: any[]) => {
         throw new Error(`Decorated class member for type '${type === 'function' ? typeFunction.name : type}' is not injectable`);
     }
 
-    return function (target: DecoratedTarget<T>, propertyName: string) {
+    return function (target: DecoratedTarget<T>, propertyName: string, descriptor: PropertyDescriptor & { initializer?: any }) {
         typeFunction = typeFunction || Injector.getType(target, propertyName);
 
         if (!typeFunction) {
             throw new Error(`No type was specified for decorated class member '${propertyName}' in [${target.constructor.name}]`);
         }
+
+        let value = null;
 
         let provider = Injector.getProvider(typeFunction);
         if (provider && typeFunction.prototype !== Object.getPrototypeOf(provider)) {
@@ -29,22 +31,18 @@ export const Inject = <T>(typeFunction?: IInjectable<T>, ...data: any[]) => {
                 // remove undefined fields in base class
                 Object.keys(provider).forEach(key => provider[key] === undefined && delete provider[key])
 
-                provider = Object.assign(new typeFunction(data), provider);
-
-                console.log(provider['getAll']);
+                provider = Object.assign(new typeFunction(...data), provider);
 
                 if (!data) {
                     Injector.setProvider(typeFunction, provider);
                 }
             }
 
-            target[propertyName] = provider;
-            
-            return;
+            value = target[propertyName] = provider;
         }
-        
+
         try {
-            const injected = target[propertyName] = new typeFunction(data);
+            const injected = value = target[propertyName] = new typeFunction(...data);
 
             if ('predicate' in typeFunction && typeof typeFunction.predicate === 'function') {
                 typeFunction.predicate(injected);
@@ -55,6 +53,13 @@ export const Inject = <T>(typeFunction?: IInjectable<T>, ...data: any[]) => {
             }
         } catch (err) {
             throw new Error(err.message || err);
+        }
+
+        if (descriptor) {
+            delete descriptor.initializer;
+            delete descriptor.writable;
+            
+            descriptor.value = value;
         }
     };
 }
@@ -87,8 +92,8 @@ class Injector {
     }
 
     public static setProviderType<T>(typeFunction: IInjectable<T>, ...data: any[]) {
-        const provider = new typeFunction(data);
-        
+        const provider = new typeFunction(...data);
+
         if ('predicate' in typeFunction && typeFunction['predicate']) {
             typeFunction.predicate(provider);
         }
@@ -112,7 +117,7 @@ class Injector {
     public static isProviderType(typeFunction: Function | IInjectable<any>) {
         return Injector.providers.get(typeFunction) !== undefined;
     }
-    
+
     public static getParamTypes<T>(target: DecoratedTarget<T>): any[] {
         return metadata(target, 'paramtypes');
     }
