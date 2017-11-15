@@ -1,6 +1,5 @@
 import * as Koa from 'koa';
 import * as KoaRouter from 'koa-router';
-import * as chalk from 'chalk';
 
 import { IInjectable, Provider, DecoratedTarget, getParamTypes, getProvider } from './DependencyInjection';
 

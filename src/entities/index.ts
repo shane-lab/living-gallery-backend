@@ -1,3 +1,4 @@
 import { Client } from './Client';
+import { User } from './User';
 
-export = { Client };
+export = { Client, User };
