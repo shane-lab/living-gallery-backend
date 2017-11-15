@@ -21,11 +21,21 @@ interface IRoute {
 
 declare type RouterRoute = Function & IRoute;
 
+declare type ParamTypes = 'params' | 'query' | 'body' | 'headers';
+
+interface IRouteParam {
+    name: string;
+    type: ParamTypes;
+    methodName: string;
+    index: number;
+}
+
 interface IInjectableRouter<T> {
     new(...data: {[key:string]: any}[]): T
     injectable?: true;
-    params?: any[];
+    args?: any[];
     routes?: RouterRoute[];
+    params?: IRouteParam[];
     options?: IInjectableRouterOptions
 }
 
@@ -51,7 +61,7 @@ export const InjectableRouter = <T>(data?: IInjectableRouterOptions) => {
                 throw new Error(`Missmatching injectable parameters resolved ${resolvedParams.length} out of ${paramtypes.length}`);
             }
 
-            router.params = resolvedParams;
+            router.args = resolvedParams;
         }
     }
 }
@@ -71,13 +81,25 @@ export const Route = (path: string, type: RouterHandlerTypes = 'get') => {
     }
 }
 
+export const Param = (name: string, type: ParamTypes = 'params') => {
+    return function (target: any, methodName, index: number) {
+        const routerClass = target.constructor as IInjectableRouter<any>;
+
+        const param = { name, type, methodName, index } as IRouteParam;
+
+        const params = routerClass.params = (routerClass.params || [] as IRouteParam[]);
+
+        params.push(param);
+    }
+}
+
 export const KoaRouterFactory = <T>(target: IInjectableRouter<T>, prefix?: string) => {
     if (target && !(typeof target === 'function' && target.injectable)) {
         const type = typeof target;
         throw new Error(`The given provider '${type === 'function' ? target.name : type}' is not decorated as an instance of injectable router`);
     }
 
-    const injectableRouter = new target(...target.params);
+    const injectableRouter = new target(...target.args);
 
     let options = target.options;
     if (prefix && /^\/w+/.test(prefix)) {
@@ -89,12 +111,20 @@ export const KoaRouterFactory = <T>(target: IInjectableRouter<T>, prefix?: strin
     }
 
     const router = new KoaRouter(options);
-
-    target.routes.forEach(route => router[route.type](route.path, async (ctx) => ctx.body = await injectableRouter[route.func.name]()));
-
-    router.get('/', async (ctx) =>  ctx.body = `${options.prefix || target.name} -> index`);
+    
+    target.routes.forEach(route => router[route.type](route.path, async (ctx) => ctx.body = await injectableRouter[route.func.name](...invokeKoaRouteParams(ctx, route, target.params))));
+    
+    // all routers come with a default index action (protocol:://host:?port/router{/?...routes}), this can be overriden in the decorated router class
+    router.get('/', async (ctx) => ctx.body = `${options.prefix || target.name} -> index`);
 
     return router;
+}
+
+function invokeKoaRouteParams(ctx: KoaRouter.IRouterContext, route: RouterRoute, params: IRouteParam[]) {
+    return params && params
+        .filter(param => param.methodName === route.func.name)
+        .sort((a, b) => a.index - b.index)
+        .map(param => param.type === 'body' ? !!param.name ? ctx.request.body[param.name] : ctx.request.body : ctx[param.type][param.name] || null);
 }
 
 function resolveParamTypes<T>(target: DecoratedTarget<T>, handlers: IInjectable<any>[]) {

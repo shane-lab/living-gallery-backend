@@ -43,10 +43,22 @@ export abstract class BaseController<T extends BaseEntity<T>> {
     async updateById(id: number|string, fields: Partial<T>) {
         this.validate(fields);
 
-        return await this.db().updateById(id, fields);
+        try {
+            await this.db().updateById(id, fields);
+        } catch(err) {
+            throw new BadRequest(err && err.message || `Unable to update entity with id '${id}'`);
+        }
+
+        return await this.getById(id);
     }
 
     async deleteById(id: number|string) {
-        return await this.db().removeById(id);
+        try {
+            await this.db().deleteById(id);
+        } catch (err) {
+            throw new BadRequest(err && err.message || `Unable to remove entity with id '${id}'`);
+        }
+
+        return 'success';
     }
 }

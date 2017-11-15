@@ -1,4 +1,4 @@
-import { Entity, Column, VersionColumn, CreateDateColumn, UpdateDateColumn, BeforeInsert, AfterInsert } from 'typeorm';
+import { Entity, Column, VersionColumn, CreateDateColumn, UpdateDateColumn, BeforeInsert, AfterInsert, BeforeRemove, AfterUpdate, AfterRemove } from 'typeorm';
 import * as chalk from 'chalk';
 
 import { EnvironmentPrimaryColumn } from './decorators/PrimaryColumn';
@@ -41,5 +41,15 @@ export abstract class BaseEntity<T> {
     @AfterInsert()
     private afterInsert() {
         print(this, 'after insert');
+    }
+
+    @BeforeRemove()
+    private beforeRemove() {
+        print(this, 'before remove');
+    }
+
+    @AfterRemove()
+    private afterRemove() {
+        print(this, 'after remove');
     }
 };
