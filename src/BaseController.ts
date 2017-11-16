@@ -1,5 +1,5 @@
 import { Connection, getConnection, getManager, Repository } from 'typeorm';
-import { BadRequest } from 'http-errors';
+import * as HttpErrors from 'http-errors';
 
 import { BaseEntity } from './BaseEntity';
 
@@ -21,11 +21,23 @@ export abstract class BaseController<T extends BaseEntity<T>> {
     }
 
     async getOne(fields: Partial<T>) {
-        return await this.db().findOne(fields);
+        const entity = await this.db().findOne(fields);
+
+        if (!entity) {
+            throw new HttpErrors.UnprocessableEntity();
+        }
+
+        return entity;
     }
 
     async getById(id: number|string) {
-        return this.db().findOneById(id);
+        const entity = await this.db().findOneById(id);
+
+        if (!entity) {
+            throw new HttpErrors.UnprocessableEntity(`Unable to find entity with id '${id}'`);
+        }
+
+        return entity;
     }
 
     async add(fields?: Partial<T>) {
@@ -34,7 +46,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         const entity = await this.db().create(fields);
 
         if (!entity) {
-            throw new BadRequest('Unable to create entity');
+            throw new HttpErrors.BadRequest('Unable to create entity');
         }
 
         return await this.db().save(entity);
@@ -43,20 +55,24 @@ export abstract class BaseController<T extends BaseEntity<T>> {
     async updateById(id: number|string, fields: Partial<T>) {
         this.validate(fields);
 
+        const entity = await this.getById(id);
+
         try {
-            await this.db().updateById(id, fields);
+            await this.db().update(entity, fields);
         } catch(err) {
-            throw new BadRequest(err && err.message || `Unable to update entity with id '${id}'`);
+            throw new HttpErrors.BadRequest(`Unable to update entity with id '${id}'`);
         }
 
         return await this.getById(id);
     }
 
     async deleteById(id: number|string) {
+        const entity = await this.getById(id);
+
         try {
             await this.db().deleteById(id);
         } catch (err) {
-            throw new BadRequest(err && err.message || `Unable to remove entity with id '${id}'`);
+            throw new HttpErrors.BadRequest(`Unable to remove entity with id '${id}'`);
         }
 
         return 'success';
