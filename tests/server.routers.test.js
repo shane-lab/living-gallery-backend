@@ -36,4 +36,13 @@ describe('routers', () => {
                 .end(done);
         });
     });
+    
+    describe('when GET /auth', () => {
+        it('should return 200+', done => {
+            request
+                .get('/api')
+                .expect(statusOK)
+                .end(done);
+        });
+    });
 });

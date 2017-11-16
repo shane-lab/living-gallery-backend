@@ -10,10 +10,10 @@ export class ApiRouter {
 
     constructor(private clientController: ClientController, private userController: UserController) { }
 
-    // @Route('/')
-    // public index() {
-    //     return 'index action'; // api docs?
-    // }
+    @Route('/')
+    public index() {
+        return 'index action'; // api docs?
+    }
 
     @Route('/clients')
     public getAllClients() {

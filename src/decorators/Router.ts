@@ -5,8 +5,23 @@ import { IInjectable, Provider, DecoratedTarget, getParamTypes, getProvider } fr
 
 const isPrimitive = (type: any) => ['string', 'number', 'boolean', 'object'].indexOf(type.toLowerCase()) >= 0;
 
+interface IRedirectOptions {
+    path: string | string[];
+    destination: string;
+    router?: string;
+    code?: number;
+}
+
+interface IRouterAlias {
+    name: string;
+    destination: string;
+}
+
 interface IInjectableRouterOptions {
     prefix: string;
+    skipDefaultRoute?: boolean;
+    aliases?: IRouterAlias[];
+    redirects?: IRedirectOptions[]
     providers?: Function[];
 };
 
@@ -46,6 +61,7 @@ export const InjectableRouter = <T>(data?: IInjectableRouterOptions) => {
         router.injectable = true;
         router.options = data;
         router.routes = router.routes || [];
+        router.args = [];
 
         if (router.options && !/^\//.test(router.options.prefix)) {
             router.options.prefix = `\/${router.options.prefix}`;
@@ -110,20 +126,60 @@ export const KoaRouterFactory = <T>(target: IInjectableRouter<T>, prefix?: strin
     }
 
     const router = new KoaRouter(options);
-    
-    target.routes.forEach(route => router[route.type](route.path, async (ctx) => ctx.body = await injectableRouter[route.func.name](...invokeKoaRouteParams(ctx, route, target.params))));
-    
-    // all routers come with a default index action (protocol:://host:?port/router{/?...routes}), this can be overriden in the decorated router class
-    router.get('/', async (ctx) => ctx.body = `${options.prefix || target.name} -> index`);
 
-    return router;
+    let aliasedRouters: KoaRouter[];
+    if (options.aliases) {
+        aliasedRouters = [];
+        options.aliases.forEach(alias => {
+            let prefix = alias.name;
+            if (!!prefix) {
+                prefix = /^\//.test(prefix) ? prefix : `/${prefix}`;
+            }
+
+            const destination = options.prefix + alias.destination;
+            
+            const aliasedRouter = new KoaRouter({ prefix });
+            aliasedRouter.redirect('/', destination, 302);
+
+            aliasedRouters.push(aliasedRouter);
+        });
+    }
+    
+    if (options.redirects) {
+        options.redirects.forEach(redirect => {
+
+            let prefix = redirect.router;
+            if (!!prefix) {
+                prefix = /^\//.test(prefix) ? prefix : `/${prefix}`;
+            }
+            
+            const destination = (prefix || options.prefix) + redirect.destination;
+            
+            if (Array.isArray(redirect.path)) {
+                redirect.path.forEach(path => router.redirect(path, destination, redirect.code || 302));
+            } else {
+                router.redirect(redirect.path as string, destination, redirect.code || 302);
+            }
+        });
+    }
+    
+    if (target.routes) {
+        target.routes.forEach(route => router[route.type](route.path, async (ctx) => ctx.body = await injectableRouter[route.func.name](...invokeKoaRouteParams(ctx, route, target.params))));
+    }
+
+    // all routers come with a default index action (protocol:://host:?port/router{/?...routes}), this can be overriden in the decorated router class
+    if (!options.skipDefaultRoute) {
+        router.get('/', async (ctx) => ctx.body = `${options.prefix || target.name} -> index`);
+    }
+    
+    return { router, aliasedRouters };
 }
 
 function invokeKoaRouteParams(ctx: KoaRouter.IRouterContext, route: RouterRoute, params: IRouteParam[]) {
     return params && params
         .filter(param => param.methodName === route.func.name)
         .sort((a, b) => a.index - b.index)
-        .map(param => param.type === 'body' ? !!param.name ? ctx.request.body[param.name] : ctx.request.body : ctx[param.type][param.name] || null);
+        .map(param => param.type === 'body' ? !!param.name ? ctx.request.body[param.name] : ctx.request.body : ctx[param.type][param.name] || null) || [];
 }
 
 function resolveParamTypes<T>(target: DecoratedTarget<T>, handlers: IInjectable<any>[]) {
