@@ -38,10 +38,31 @@ describe('routers', () => {
     });
     
     describe('when GET /auth', () => {
-        it('should return 200+', done => {
+        it('should redirect to /auth/login with statuscode 302', done => {
             request
-                .get('/api')
-                .expect(statusOK)
+                .get('/auth')
+                .expect(302)
+                .expect('Location', '/auth/login')
+                .end(done);
+        });
+    });
+
+    describe('when GET /login', () => {
+        it('should use alias \'/login\' to redirect to /auth/login with statuscode 302', done => {
+            request
+                .get('/login')
+                .expect(302)
+                .expect('Location', '/auth/login')
+                .end(done);
+        });
+    });
+    
+    describe('when GET /register', () => {
+        it('should use alias \'/register\' to redirect to /auth/register with statuscode 302', done => {
+            request
+                .get('/register')
+                .expect(302)
+                .expect('Location', '/auth/register')
                 .end(done);
         });
     });
