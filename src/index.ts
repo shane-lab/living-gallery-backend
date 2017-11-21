@@ -49,6 +49,11 @@ module.exports.getApp = async (type?: string): Promise<TypedApplication> => {
 
     app.context.db = connection;
     
+    app.use(require('koa-helmet')({
+        frameguard: {
+            action: 'deny'
+        }
+    }))
     app.use(require('koa-logger')());
     app.use(require('koa-useragent'));
     app.use(require('koa-bodyparser')());
