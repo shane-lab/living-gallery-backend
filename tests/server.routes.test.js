@@ -9,10 +9,13 @@ describe('routes', () => {
 
     /** @type {supertest.SuperTest<supertest.Test>} */
     let request;
+    
+    /** @type {typeorm.Connection} */
+    let db;
 
     before(done => {
         getApp()
-            .then(app => supertest.agent(app.callback()))
+            .then(app => (db = app.context.db, supertest.agent(app.callback())))
             .then(req => (request = req, done()))
             .catch(done);
     });
@@ -65,5 +68,11 @@ describe('routes', () => {
                 .expect('Location', '/auth/register')
                 .end(done);
         });
+    });
+
+    after(async () => {
+        await db.close();
+
+        return void 0;
     });
 });

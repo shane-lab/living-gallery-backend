@@ -449,4 +449,10 @@ describe('API Router (/api/${route}/${...args})', () => {
 
         return void 0;
     });
+
+    after(async () => {
+        await db.close();
+
+        return void 0;
+    });
 });
