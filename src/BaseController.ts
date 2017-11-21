@@ -57,8 +57,13 @@ export abstract class BaseController<T extends BaseEntity<T>> {
 
         const entity = await this.getById(id);
 
+        // ommit changing default values
+        delete fields.uuid;
+        delete fields.createdAt;
+        delete fields.updatedAt;
+        
         try {
-            await this.db().update(entity, fields);
+            await this.db().updateById(id, fields);
         } catch(err) {
             throw new HttpErrors.BadRequest(`Unable to update entity with id '${id}'`);
         }

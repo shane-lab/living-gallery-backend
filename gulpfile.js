@@ -17,9 +17,9 @@ const mochaTask = (task) => shell.task(`mocha --require babel-register ./tests/$
 
 gulp.task('test:all', mochaTask('*'));
 
-gulp.task('test:api:client', mochaTask('server.api.client'));
+gulp.task('test:api', mochaTask('server.routers.api'));
 
-gulp.task('test:routers', mochaTask('server.routers'));
+gulp.task('test:routes', mochaTask('server.routes'));
 
 gulp.task('test:injection', mochaTask('injection'));
 

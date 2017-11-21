@@ -5,7 +5,7 @@ const chai = require('chai');
 
 const { getApp } = require('../build');
 
-describe('routers', () => {
+describe('routes', () => {
 
     /** @type {supertest.SuperTest<supertest.Test>} */
     let request;

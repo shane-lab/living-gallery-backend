@@ -1,12 +1,11 @@
-import { Entity, Column, VersionColumn, CreateDateColumn, UpdateDateColumn, BeforeInsert, AfterInsert, BeforeRemove, AfterUpdate, AfterRemove } from 'typeorm';
-import * as chalk from 'chalk';
+import { Entity, Column, VersionColumn, CreateDateColumn, UpdateDateColumn, BeforeInsert, AfterInsert, BeforeUpdate, AfterUpdate, BeforeRemove, AfterRemove } from 'typeorm';
+import { validate } from 'class-validator';
+import * as HttpErrors from 'http-errors';
 
 import { EnvironmentPrimaryColumn } from './decorators/PrimaryColumn';
 
 // ommit setting value through constructor to surpass default value.
 const isUnset = (obj: any) => obj === undefined || obj === null;
-
-const print = (obj: Object, message?: string) => (message ? console.log(chalk.default`--{blue ${message}}--`) : void 0, Object.entries(obj).forEach(([key, value]) => console.log(chalk.default`{green ${key}}: {red ${value}}`)));
 
 export abstract class BaseEntity<T> {
 
@@ -34,22 +33,30 @@ export abstract class BaseEntity<T> {
     }
     
     @BeforeInsert()
-    private beforeInsert() {
-        print(this, 'before insert');
+    private async beforeInsert() {
+        const [error] = await validate(this);
+
+        if (!error) {
+            return;
+        }
+        
+        throw new HttpErrors.BadRequest(`Unable to create new ${this.constructor.name}. Property '${error.property}' with value '${error.value}' is invalid.`);
     }
 
     @AfterInsert()
-    private afterInsert() {
-        print(this, 'after insert');
+    private afterInsert() { }
+
+    @BeforeUpdate()
+    private async beforeUpdate() { 
+        console.log('before update')
     }
+
+    @AfterUpdate()
+    private afterUpdate() { }
 
     @BeforeRemove()
-    private beforeRemove() {
-        print(this, 'before remove');
-    }
+    private async beforeRemove() { }
 
     @AfterRemove()
-    private afterRemove() {
-        print(this, 'after remove');
-    }
+    private afterRemove() { }
 };

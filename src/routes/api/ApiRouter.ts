@@ -1,7 +1,7 @@
-import { ClientController, Client } from '../../controllers/ClientController';
-
 import { InjectableRouter as Router, Route, Param } from '../../decorators/Router';
-import { UserController } from '../../controllers/UserController';
+
+import { ClientController, Client } from '../../controllers/ClientController';
+import { UserController, User } from '../../controllers/UserController';
 
 declare type Id = string | number;
 
@@ -48,5 +48,25 @@ export class ApiRouter {
     @Route('/users')
     public getAllUsers() {
         return this.userController.getAll();
+    }
+
+    @Route('/users', 'post')
+    public addUser(@Param(null, 'body') fields: Partial<User>) {
+        return this.userController.add(fields);
+    }
+
+    @Route('/users/:id')
+    public getUserById(@Param('id') id: Id) {
+        return this.userController.getById(id);
+    }
+
+    @Route('/users/:id', 'put')
+    public updateUserById(@Param('id') id: Id, @Param(null, 'body') fields: Partial<Client>) {
+        return this.userController.updateById(id, fields);
+    }
+
+    @Route('/users/:id', 'delete')
+    public deleteUserById(@Param('id') id: Id) {
+        return this.userController.deleteById(id);
     }
 }
