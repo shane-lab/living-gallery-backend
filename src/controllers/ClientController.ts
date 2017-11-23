@@ -1,7 +1,7 @@
 import { Connection } from 'typeorm';
 import { NotFound } from 'http-errors';
 
-import { BaseController } from '../BaseController';
+import { BaseController, Method } from '../BaseController';
 
 import { Client } from '../entities/Client';
 
@@ -11,7 +11,7 @@ export class ClientController extends BaseController<Client> {
         super(connection, Client);
     }
 
-    protected validate(fields: Partial<Client>) { }
+    protected validate(fields: Partial<Client>, method: Method) { }
 }
 
 class ClientNotFound extends NotFound {

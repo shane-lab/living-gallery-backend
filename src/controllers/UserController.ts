@@ -1,6 +1,6 @@
 import { Connection } from 'typeorm';
 
-import { BaseController } from '../BaseController';
+import { BaseController, Method } from '../BaseController';
 
 import { User } from '../entities/User';
 
@@ -10,7 +10,7 @@ export class UserController extends BaseController<User> {
         super(connection, User);
     }
 
-    protected validate(fields: Partial<User>) { }
+    protected validate(fields: Partial<User>, method: Method) { }
 
     public async authenticate(username: string, password: string) {
         // todo: add validation (JWT?)

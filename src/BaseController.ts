@@ -5,6 +5,8 @@ import { BaseEntity } from './BaseEntity';
 
 import { Injectable } from './decorators/DependencyInjection';
 
+export declare type Method = 'select' | 'insert' | 'update' | 'delete';
+
 @Injectable((target: BaseController<T>) => target.connection = getConnection(process.env.NODE_ENV))
 export abstract class BaseController<T extends BaseEntity<T>> {
 
@@ -14,7 +16,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         return this.connection.getRepository(this.type);
     }
 
-    protected abstract validate(fields: Partial<T>);
+    protected abstract validate(fields: Partial<T>, method: Method);
 
     async getAll() {
         return await this.db().find({});
@@ -41,7 +43,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
     }
 
     async add(fields?: Partial<T>) {
-        this.validate(fields);
+        this.validate(fields, 'insert');
 
         const entity = await this.db().create(fields);
 
@@ -53,7 +55,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
     }
 
     async updateById(id: number|string, fields: Partial<T>) {
-        this.validate(fields);
+        this.validate(fields, 'update');
 
         const entity = await this.getById(id);
 

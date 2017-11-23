@@ -41,18 +41,20 @@ export const Inject = <T>(typeFunction?: IInjectable<T>, ...data: any[]) => {
             value = target[propertyName] = provider;
         }
 
-        try {
-            const injected = value = target[propertyName] = new typeFunction(...data);
-
-            if ('predicate' in typeFunction && typeof typeFunction.predicate === 'function') {
-                typeFunction.predicate(injected);
+        if (!value) {
+            try {
+                const injected = value = target[propertyName] = new typeFunction(...data);
+    
+                if ('predicate' in typeFunction && typeof typeFunction.predicate === 'function') {
+                    typeFunction.predicate(injected);
+                }
+    
+                if (!data) {
+                    Injector.setProvider(typeFunction, injected);
+                }
+            } catch (err) {
+                throw new Error(err.message || err);
             }
-
-            if (!data) {
-                Injector.setProvider(typeFunction, injected);
-            }
-        } catch (err) {
-            throw new Error(err.message || err);
         }
 
         if (descriptor) {

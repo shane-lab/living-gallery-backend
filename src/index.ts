@@ -35,8 +35,10 @@ module.exports.getApp = async (type?: string): Promise<TypedApplication> => {
     
     app.use(async (ctx, next) => {
         try {
+            console.log('before await next')
             await next();
-    
+   
+            console.log('after await next')
             if (!ctx.body) {
                 ctx.throw(404);
             }

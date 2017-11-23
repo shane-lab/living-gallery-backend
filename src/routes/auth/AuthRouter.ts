@@ -17,11 +17,23 @@ import { InjectableRouter as Router, Route, Param } from '../../decorators/Route
         destination: '/login'
     }]
 })
-export class AuthRouter { 
+export class AuthRouter {
 
     constructor(private userController: UserController) { }
 
-    @Route('/login')
+    @Route('/login', {
+        middlewares: [(ctx, next) => {
+            console.log('one')
+            next();
+        }, async (ctx, next) => {
+            console.log('two')
+            await next();
+            console.log('four')
+        }, (ctx, next) => {
+            console.log('three')
+            next();
+        }]
+    })
     public login() {
         return 'authrouter/login';
     }

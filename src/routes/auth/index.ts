@@ -1,5 +1,5 @@
 import { AuthRouter } from './AuthRouter';
 
-import { KoaRouterFactory } from '../../decorators/Router';
+import { KoaRouterFactory } from '../../factories/KoaRouterFactory';
 
 export const router = module.exports = KoaRouterFactory(AuthRouter);
