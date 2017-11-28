@@ -13,7 +13,11 @@ const runTask = async (task, cb) => gulp.start(task);
 gulp.task('test', done => sequence(['tsc'], () => runTask('test:all')));
 
 // run after compiled, used when watching with tsc
-const mochaTask = (task) => shell.task(`mocha --require babel-register ./tests/${task}.test.js || true`);
+const mochaTask = (task) => shell.task(`mocha --require babel-register ./tests/${task}.test.js || true`, {
+    env: {
+        NODE_ENV: 'development'
+    }
+});
 
 gulp.task('test:all', mochaTask('*'));
 
