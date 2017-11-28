@@ -68,7 +68,7 @@ export const InjectableRouter = <T>(data?: IInjectableRouterOptions) => {
         router.routes = router.routes || [];
         router.args = [];
 
-        if (router.options && !/^\//.test(router.options.prefix)) {
+        if (router.options && router.options.prefix && !/^\//.test(router.options.prefix)) {
             router.options.prefix = `\/${router.options.prefix}`;
         }
 

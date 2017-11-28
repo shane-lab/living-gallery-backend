@@ -17,11 +17,21 @@ const mochaTask = (task) => shell.task(`mocha --require babel-register ./tests/$
 
 gulp.task('test:all', mochaTask('*'));
 
-gulp.task('test:api', mochaTask('server.routers.api'));
+const mochaRouterTask = (name) => mochaTask(`server.routers.${name}`);
+
+gulp.task('test:routers', mochaRouterTask('*'));
+
+gulp.task('test:routers:api', mochaRouterTask('api'));
 
 gulp.task('test:routes', mochaTask('server.routes'));
 
 gulp.task('test:injection', mochaTask('injection'));
+
+const mochaFactoryTask = (name) => mochaTask(`factories.${name}`);
+
+gulp.task('test:factories', mochaFactoryTask('*'));
+
+gulp.task('test:factories:koarouter', mochaFactoryTask('koarouter'));
 
 // clean before recompile
 gulp.task('tsc', ['clean'], shell.task('tsc'));

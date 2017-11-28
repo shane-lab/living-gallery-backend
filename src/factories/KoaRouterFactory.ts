@@ -1,7 +1,7 @@
 import * as Koa from 'koa';
 import * as KoaRouter from 'koa-router';
 
-import { RouterRoute, IInjectableRouter, IRouteParam } from '../decorators/Router';
+import { RouterRoute, IInjectableRouter, IRouteParam, IInjectableRouterOptions } from '../decorators/Router';
 import { IMiddleware } from 'koa-router';
 
 export const KoaRouterFactory = <T>(target: IInjectableRouter<T>, prefix?: string) => {
@@ -12,13 +12,17 @@ export const KoaRouterFactory = <T>(target: IInjectableRouter<T>, prefix?: strin
 
     const injectableRouter = new target(...target.args);
 
-    let options = target.options;
-    if (prefix && /^\/w+/.test(prefix)) {
-        options = Object.assign(target.options, { prefix })
+    let options = Object.assign({}, target.options) as IInjectableRouterOptions;
+    if (prefix) {
+        options = Object.assign(options, { prefix })
     }
 
     if (!options.prefix) {
         throw new Error(`No prefix set for injectable router '${target.name}'`);
+    }
+
+    if (!/^\//.test(options.prefix)) {
+        options.prefix = `/${options.prefix}`;
     }
 
     const router = new KoaRouter(options);
@@ -43,7 +47,6 @@ export const KoaRouterFactory = <T>(target: IInjectableRouter<T>, prefix?: strin
     
     if (options.redirects) {
         options.redirects.forEach(redirect => {
-
             let prefix = redirect.router;
             if (!!prefix) {
                 prefix = /^\//.test(prefix) ? prefix : `/${prefix}`;
