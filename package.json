@@ -16,7 +16,8 @@
     "test:injection": "gulp test:injection",
     "tsc": "gulp tsc",
     "tsc:w": "gulp tsc:w",
-    "clean": "gulp clean"
+    "clean": "gulp clean",
+    "postinstall": "./.heroku.sh"
   },
   "author": "",
   "license": "ISC",

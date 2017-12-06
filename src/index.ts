@@ -71,11 +71,11 @@ module.exports.getApp = async (type?: string): Promise<TypedApplication> => {
     let config = (require("../ormconfig") as typeorm.ConnectionOptions[]).find(type => type.name === connectionType);
 
     if (!!config && connectionType === 'production' && process.env.HEROKU_DEPLOYED) {
-        const {migrations, entities, cli} = config;
+        const {name, migrations, entities, cli, synchronize} = config;
 
         const dbConfig = databaseConfig(process.env.DATABASE_URL) || {} as IDbConfig;
 
-        config = Object.assign({ migrations, entities, cli }, {
+        config = Object.assign({name, migrations, entities, cli, synchronize}, {
             type: dbConfig.type || process.env.TYPEORM_DRIVER_TYPE,
             host: dbConfig.host || process.env.TYPEORM_HOST,
             port: dbConfig.port || process.env.TYPEORM_PORT,
@@ -83,7 +83,7 @@ module.exports.getApp = async (type?: string): Promise<TypedApplication> => {
             database: dbConfig.name || process.env.TYPORM_DATABASE || undefined,
             username: dbConfig.user || process.env.TYPORM_USERNAME || undefined,
             password: dbConfig.pass || process.env.TYPORM_PASSWORD || undefined,
-            extra: process.env.TYPEORM_EXTRA || undefined
+            extra: JSON.parse(process.env.TYPEORM_EXTRA || '{}')
         }) as any;
 
         Object.keys(config).forEach(key => config[key] === undefined && delete config[key]);
