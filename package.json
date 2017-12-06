@@ -17,7 +17,8 @@
     "tsc": "gulp tsc",
     "tsc:w": "gulp tsc:w",
     "clean": "gulp clean",
-    "heroku-postbuild": "sh ./.heroku.sh"
+    "postinstall": "npm run tsc",
+    "heroku-prebuild": "npm install --dev"
   },
   "author": "",
   "license": "ISC",
