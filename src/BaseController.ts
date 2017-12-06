@@ -1,4 +1,5 @@
-import { Connection, getConnection, getManager, Repository } from 'typeorm';
+import { Connection, getConnection, getManager, Repository, FindManyOptions } from 'typeorm';
+import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 import * as HttpErrors from 'http-errors';
 
 import { BaseEntity } from './BaseEntity';
@@ -13,13 +14,21 @@ export abstract class BaseController<T extends BaseEntity<T>> {
     constructor(private connection: Connection, private type: (new () => T)) { }
 
     protected db(): Repository<T> {
-        return this.connection.getRepository(this.type);
+        return this.repo(this.type);
     }
 
     protected abstract validate(fields: Partial<T>, method: Method);
 
-    async getAll() {
-        return await this.db().find({});
+    protected repo<E>(type: (new () => E)) {
+        return this.connection.getRepository(type);
+    }
+
+    protected builder(alias: string) {
+        return this.db().createQueryBuilder(alias);
+    }
+
+    async getAll(predicate: FindManyOptions<T> = {}) {
+        return await this.db().find(predicate);
     }
 
     async getOne(fields: Partial<T>) {
@@ -36,7 +45,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         const entity = await this.db().findOneById(id);
 
         if (!entity) {
-            throw new HttpErrors.UnprocessableEntity(`Unable to find entity with id '${id}'`);
+            throw new HttpErrors.UnprocessableEntity(`Unable to find entity '${this.type.name}' with id '${id}'`);
         }
 
         return entity;
@@ -48,7 +57,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         const entity = await this.db().create(fields);
 
         if (!entity) {
-            throw new HttpErrors.BadRequest('Unable to create entity');
+            throw new HttpErrors.BadRequest(`Unable to create entity '${this.type.name}'`);
         }
 
         return await this.db().save(entity);
@@ -67,7 +76,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         try {
             await this.db().updateById(id, fields);
         } catch(err) {
-            throw new HttpErrors.BadRequest(`Unable to update entity with id '${id}'`);
+            throw new HttpErrors.BadRequest(`Unable to update entity '${this.type.name}' with id '${id}'`);
         }
 
         return await this.getById(id);
@@ -79,7 +88,7 @@ export abstract class BaseController<T extends BaseEntity<T>> {
         try {
             await this.db().deleteById(id);
         } catch (err) {
-            throw new HttpErrors.BadRequest(`Unable to remove entity with id '${id}'`);
+            throw new HttpErrors.BadRequest(`Unable to remove entity '${this.type.name}' with id '${id}'`);
         }
 
         return 'success';

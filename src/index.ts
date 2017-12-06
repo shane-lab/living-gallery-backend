@@ -6,16 +6,88 @@ import convert = require('koa-convert');
 
 import * as chalk from 'chalk';
 
-interface TypeOrmContext extends Koa.BaseContext {
+interface ITypeOrmContext extends Koa.BaseContext {
     db?: typeorm.Connection;
 }
 
-declare type TypedApplication = Koa & { context: TypeOrmContext };
+declare type TypedApplication = Koa & { context: ITypeOrmContext };
+
+/**
+ * g1: driver type
+ * g2: username
+ * g3: password
+ * g4: host
+ * g5?: :port
+ * g5 | g6: database
+ */
+const uriRegex = /^\w+:\/\/[aA-zZ0-9]+:[aA-zZ0-9]+@[aA-zZ0-9-_.]+\.\w+(:\d{2,4}){0,1}\/[aA-zZ0-9]+$/gm;
+
+interface IDbConfig {
+    type: string,
+    user: string,
+    pass: string,
+    host: string,
+    port?: string | number,
+    name: string
+};
+
+const databaseConfig = (url: string): IDbConfig => {
+    if (!url || !uriRegex.test((url = url.trim()))) {
+        return undefined;
+    }
+
+    const type = url.substr(0, url.indexOf(':'));
+    // + ://
+    url = url.substr(type.length + 3, url.length);
+    const user = url.substr(0, url.indexOf(':'));
+    // + :
+    url = url.substr(user.length + 1, url.length);
+    const pass = url.substr(0, url.lastIndexOf('@'));
+    // + @
+    url = url.substr(pass.length + 1, url.length);
+    const hostWithPort = url.substr(0, url.lastIndexOf('/'));
+    let host = hostWithPort;
+    let port = 80 as string | number;
+    if (hostWithPort.includes(':')) {
+        host = hostWithPort.substr(0, hostWithPort.indexOf(':'));
+        port = hostWithPort.substr(hostWithPort.indexOf(':') + 1, hostWithPort.length);
+    }
+    // + /
+    url = url.substr(hostWithPort.length + 1, url.length);
+
+    return {
+        type,
+        user,
+        pass,
+        host,
+        port,
+        name: url
+    };
+}
 
 module.exports.getApp = async (type?: string): Promise<TypedApplication> => {
     const connectionType = process.env.NODE_ENV = type || process.env.NODE_ENV || 'development';
 
-    const config = (require("../ormconfig") as typeorm.ConnectionOptions[]).find(type => type.name === connectionType);
+    let config = (require("../ormconfig") as typeorm.ConnectionOptions[]).find(type => type.name === connectionType);
+
+    if (!!config && connectionType === 'production' && process.env.HEROKU_DEPLOYED) {
+        const {migrations, entities, cli} = config;
+
+        const dbConfig = databaseConfig(process.env.DATABASE_URL) || {} as IDbConfig;
+
+        config = Object.assign({ migrations, entities, cli }, {
+            type: dbConfig.type || process.env.TYPEORM_DRIVER_TYPE,
+            host: dbConfig.host || process.env.TYPEORM_HOST,
+            port: dbConfig.port || process.env.TYPEORM_PORT,
+            // nullable fields:
+            database: dbConfig.name || process.env.TYPORM_DATABASE || undefined,
+            username: dbConfig.user || process.env.TYPORM_USERNAME || undefined,
+            password: dbConfig.pass || process.env.TYPORM_PASSWORD || undefined,
+            extra: process.env.TYPEORM_EXTRA || undefined
+        }) as any;
+
+        Object.keys(config).forEach(key => config[key] === undefined && delete config[key]);
+    }
 
     console.log(chalk.default`creating connection for type {blue ${connectionType}}, awaiting connection...`);
     if (!config) {
@@ -53,7 +125,7 @@ module.exports.getApp = async (type?: string): Promise<TypedApplication> => {
         frameguard: {
             action: 'deny'
         }
-    }))
+    }));
     app.use(require('koa-logger')());
     app.use(require('koa-useragent'));
     app.use(require('koa-bodyparser')());

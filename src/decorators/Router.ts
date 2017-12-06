@@ -16,17 +16,29 @@ export interface IInjectableRouterOptions {
     prefix: string;
     skipDefaultRoute?: boolean;
     aliases?: IRouterAlias[];
-    redirects?: IRedirectOptions[]
+    redirects?: IRedirectOptions[];
+    middleware?: MiddlewareCallback;
     providers?: Function[];
 };
 
 export declare type RouterHandlerTypes = 'get' | 'put' | 'post' | 'delete';
 
+type Indexable = { [key: string]: any };
+
 export interface IMiddlewareContext {
     session?: any;
     req: any;
     res: any;
-    throw: (statusCode: number, message: number) => void;
+    set?: (key: string, value: any) => void;
+    get?: (key: string) => any;
+    router?: Indexable;
+    body?: Indexable;
+    params?: Indexable;
+    headers?: Indexable;
+    query?: Indexable;
+    fromProviders?: <T>(target: DecoratedTarget<T>) => T;
+    redirect: (url: string, alt?: string) => void;
+    throw: (statusCode: number, message?: string) => void;
 }
 
 export declare type MiddlewareCallback = (ctx: IMiddlewareContext, next: () => Promise<any>) => void | Promise<void>;
@@ -35,6 +47,7 @@ export interface IRoute {
     path: string;
     type: RouterHandlerTypes;
     func: Function;
+    skipRouterMiddleware: boolean;
     middlewares?: MiddlewareCallback[]
 }
 
@@ -50,56 +63,74 @@ export interface IRouteParam {
 }
 
 export interface IInjectableRouter<T> {
-    new(...data: {[key:string]: any}[]): T
+    new(...data: { [key: string]: any }[]): T
     injectable?: true;
+    options?: IInjectableRouterOptions;
+}
+
+export interface IInjectedRouter<T> {
     args?: any[];
     routes?: RouterRoute[];
     params?: IRouteParam[];
-    options?: IInjectableRouterOptions
+    providers?: Map<DecoratedTarget<any>, T>
 }
 
-export declare type RouterProvider<T> = DecoratedTarget<T> & IInjectableRouter<T>;
+export declare type RouterProvider<T> = DecoratedTarget<T> & IInjectableRouter<T> & IInjectedRouter<T>;
 
 export const InjectableRouter = <T>(data?: IInjectableRouterOptions) => {
-    return function(target: DecoratedTarget<T>) {
+    return function (target: DecoratedTarget<T>) {
         const router = target as RouterProvider<T>
         router.injectable = true;
         router.options = data;
         router.routes = router.routes || [];
         router.args = [];
+        router.providers = new Map<DecoratedTarget<T>, any>();
 
         if (router.options && router.options.prefix && !/^\//.test(router.options.prefix)) {
             router.options.prefix = `\/${router.options.prefix}`;
         }
 
+        // get constructor types
         const paramtypes = getParamTypes(router);
-        
-        if (paramtypes && paramtypes.length) {
-            const resolvedParams = resolveParamTypes(target, paramtypes);
 
+        if (paramtypes && paramtypes.length) {
+            const resolvedParams = resolveProviderTypes(target, paramtypes);
             if (paramtypes.length !== resolvedParams.length) {
                 throw new Error(`Missmatching injectable parameters resolved ${resolvedParams.length} out of ${paramtypes.length}`);
             }
 
             router.args = resolvedParams;
         }
+
+        if (router.options && router.options.providers) {
+            router.options.providers.forEach((providerType: IInjectable<any>) => {
+                const provider = getProvider(providerType);
+                if (!provider) {
+                    throw new Error(`Given provider ${providerType.name} at ${router.name} is not (properly) decorated as injectable`);
+                }
+
+                router.providers.set(providerType, provider);
+            });
+        }
     }
 }
 
 interface IRouteOptions {
     type?: RouterHandlerTypes;
+    skipRouterMiddleware?: boolean;
     middlewares?: MiddlewareCallback[];
 }
 
 export const Route = (path: string, typeOrOpts: IRouteOptions | RouterHandlerTypes = 'get') => {
     return function (target: any, prop: string, descriptor: PropertyDescriptor) {
-        const routerClass = target.constructor as IInjectableRouter<any>;
+        const routerClass = target.constructor as RouterProvider<any>;
 
         const route = descriptor.value as RouterRoute;
         route.path = path;
         route.type = typeof typeOrOpts === 'string' ? typeOrOpts : typeOrOpts.type || 'get';
         if (!!typeOrOpts && typeof typeOrOpts !== 'string') {
             route.middlewares = typeOrOpts.middlewares;
+            route.skipRouterMiddleware = typeOrOpts.skipRouterMiddleware || false;
         }
         route.func = descriptor.value;
 
@@ -111,7 +142,7 @@ export const Route = (path: string, typeOrOpts: IRouteOptions | RouterHandlerTyp
 
 export const Param = (name: string, type: ParamTypes = 'params') => {
     return function (target: any, methodName, index: number) {
-        const routerClass = target.constructor as IInjectableRouter<any>;
+        const routerClass = target.constructor as RouterProvider<any>;
 
         const param = { name, type, methodName, index } as IRouteParam;
 
@@ -121,20 +152,22 @@ export const Param = (name: string, type: ParamTypes = 'params') => {
     }
 }
 
-function resolveParamTypes<T>(target: DecoratedTarget<T>, handlers: IInjectable<any>[]) {
-    return handlers.map(handler => {
-        let provider = getProvider(handler);
+function resolveProviderTypes<T>(target: DecoratedTarget<T>, handlers: IInjectable<any>[]) {
+    return handlers.map(handler => resolveProviderType(target, handler)).filter(resolved => !!resolved);
+}
 
-        if (!provider) {
-            return undefined;
-        }
-        
-        if (!(provider instanceof handler)) {
-            provider = merge(handler, provider);
-        }
+function resolveProviderType<T>(target: DecoratedTarget<T>, handler: IInjectable<any>) {
+    let provider = getProvider(handler);
 
-        return provider;
-    }).filter(resolved => !!resolved);
+    if (!provider) {
+        return undefined;
+    }
+
+    if (!(provider instanceof handler)) {
+        provider = merge(handler, provider);
+    }
+
+    return provider;
 }
 
 function merge<T>(handler: IInjectable<T>, provider: T): T {

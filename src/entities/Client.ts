@@ -1,12 +1,16 @@
-import { Entity, Column, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, JoinColumn, OneToMany, ManyToMany } from 'typeorm';
 
 import { BaseEntity } from '../BaseEntity';
+import { Creature } from './Creature';
 
 @Entity()
 export class Client extends BaseEntity<Client> {
     
-    @ManyToOne(type => Client, client => client.neighbors, {
+    @ManyToMany(type => Client, client => client.neighbors, {
         cascadeUpdate: true
     })
     neighbors: Client[];
+
+    @OneToMany(type => Creature, creature => creature.client)
+    creatures: Creature[];
 };

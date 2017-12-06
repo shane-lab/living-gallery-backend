@@ -1,6 +1,7 @@
 import { UserController, User } from '../../controllers/UserController';
 
 import { InjectableRouter as Router, Route, Param } from '../../decorators/Router';
+import { JwtService } from '../../services/JwtService';
 
 @Router({ 
     prefix: 'auth',
@@ -15,25 +16,20 @@ import { InjectableRouter as Router, Route, Param } from '../../decorators/Route
     redirects: [{
         path: '/',
         destination: '/login'
-    }]
+    }],
+    middleware: (ctx, next) => {
+        const jwtService = ctx.fromProviders(JwtService);
+        jwtService.resolve(ctx.headers);
+        
+        next();
+    },
+    providers: [JwtService]
 })
 export class AuthRouter {
 
     constructor(private userController: UserController) { }
 
-    @Route('/login', {
-        middlewares: [(ctx, next) => {
-            console.log('one')
-            next();
-        }, async (ctx, next) => {
-            console.log('two')
-            await next();
-            console.log('four')
-        }, (ctx, next) => {
-            console.log('three')
-            next();
-        }]
-    })
+    @Route('/login', { skipRouterMiddleware: true })
     public login() {
         return 'authrouter/login';
     }

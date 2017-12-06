@@ -7,3 +7,4 @@ build
 **/*.map
 .dependencies
 **/*npm-debug.log.*
+.env
