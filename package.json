@@ -55,7 +55,7 @@
     "@types/supertest": "2.0.3",
     "assert": "1.4.1",
     "babel-core": "6.26.0",
-    "babel-loader": "7.1.2",
+    "babel-loader": "7.1.5",
     "babel-plugin-syntax-decorators": "6.13.0",
     "babel-plugin-transform-class-properties": "6.24.1",
     "babel-plugin-transform-decorators": "6.24.1",
