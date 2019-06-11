@@ -78,7 +78,7 @@
     "promisify-supertest": "1.0.0",
     "run-sequence": "2.2.0",
     "should": "13.1.3",
-    "supertest": "3.0.0",
+    "supertest": "3.4.2",
     "tsc-watch": "1.0.8",
     "typeorm": "^0.1.2",
     "typescript": "2.6.1"
